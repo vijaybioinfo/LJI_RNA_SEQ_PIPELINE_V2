@@ -6,6 +6,9 @@
 * La Jolla, CA USA
 * Current version: 2.0 (05/27/2020)
 ------
+
+[![DOI](https://zenodo.org/badge/946885856.svg)](https://doi.org/10.5281/zenodo.15008966)
+
 #  Summary
 
 The pipeline was developed for RNA-Seq read mapping and QC as part of the interactive work flow between sequence and bioinformatics team. The version 2 pipeline was implemented using Snakemake in Sun Grid Engine (SGE) environment, and it can be can be implemented in any cluster and cloud environments without significant modifications. Compare to version 1 pipeline, we added features that enables recording history of each QC iteration and integrated the 3 steps approach to 1 step operation. The workflow and pipeline structure are as follows:
