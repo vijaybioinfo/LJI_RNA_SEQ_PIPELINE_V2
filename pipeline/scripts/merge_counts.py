@@ -12,8 +12,18 @@ dict_conf = read_json(snakemake.params[0])
 sample_list = snakemake.params[1]
 
 # get counts
-df_anno = pd.read_csv(dict_conf['config']['annotation_file'],index_col = 0)   
-count_tables = [pd.read_csv(f'2.Internal_files/bam_aligned/{sample}/{sample}_ReadsPerGene.out.tab',sep = '\t',skiprows = 4,header = None).set_index(0)[[1]] for sample in sorted(sample_list)]
+df_anno = pd.read_csv(dict_conf['config']['annotation_file'],index_col = 0)
+### Cristian edit to account for strandness of data
+if seq_tech == 'undstranded': # SMARTseq
+    count_tables = [pd.read_csv(f'2.Internal_files/bam_aligned/{sample}/{sample}_ReadsPerGene.out.tab',sep = '\t',skiprows = 4,header = None).set_index(0)[[1]].rename(columns={1: str(e)}) for e,sample in enumerate(sorted(sample_list))]
+elif seq_tech == 'stranded_1nd': 
+    count_tables = [pd.read_csv(f'2.Internal_files/bam_aligned/{sample}/{sample}_ReadsPerGene.out.tab',sep = '\t',skiprows = 4,header = None).set_index(0)[[1]].rename(columns={1: str(e)}) for e,sample in enumerate(sorted(sample_list))]
+elif seq_tech == 'stranded_2nd': # TRUSeq
+    count_tables = [pd.read_csv(f'2.Internal_files/bam_aligned/{sample}/{sample}_ReadsPerGene.out.tab',sep = '\t',skiprows = 4,header = None).set_index(0)[[3]].rename(columns={1: str(e)}) for e,sample in enumerate(sorted(sample_list))]
+else:
+    cat('Strandeness not provided correctly. By defaul undstranded values are selected')
+    count_tables = [pd.read_csv(f'2.Internal_files/bam_aligned/{sample}/{sample}_ReadsPerGene.out.tab',sep = '\t',skiprows = 4,header = None).set_index(0)[[1]].rename(columns={1: str(e)}) for e,sample in enumerate(sorted(sample_list))]
+    
 df_counts = reduce(lambda left,right: pd.merge(left,right,left_index = True, right_index = True), count_tables)
 df_counts.columns = sorted(sample_list)
 filter_gene_list = df_anno[df_anno["gene_type"].str.contains('tRNA|rRNA')==False].index
