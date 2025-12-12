@@ -118,6 +118,7 @@ Example for LJI implementation.
         "dirin": "/mnt/BioAdHoc/Groups/vd-vijay/VIJAY_LAB_RNA_SEQ/Project_SeAs/SeAs_TREGmem_Resting", 
         "metadata_dir":"/mnt/BioAdHoc/Groups/vd-vijay/VIJAY_LAB_RNA_SEQ/Project_SeAs/SeAs_TREGmem_Resting/metadata_all.csv",
         "run_type":"PE",
+        "seq_tech": "unstranded", # ["undstranded", "stranded_1st", "stranded_2nd"]
         "run_ID":"Run_1",
         "genome_version":"hg19",
         "bed_dir": "/mnt/BioAdHoc/Groups/vd-ay/RNASeq_Workflow/Reference/hg19_GencodeCompV19.bed", 
@@ -142,6 +143,7 @@ Example for LJI implementation.
 }
 ```
 
+Note that for the 'seq_tech' parameter you can choose between ["undstranded", "stranded_1st", "stranded_2nd"] dependeing on the strandness of your protocol.
 
 # Check results
 
