@@ -143,7 +143,7 @@ Example for LJI implementation.
 }
 ```
 
-Note that for the 'seq_tech' parameter you can choose between ["undstranded", "stranded_1st", "stranded_2nd"] dependeing on the strandness of your protocol.
+Note that for the 'seq_tech' parameter you can choose between ["undstranded", "stranded_1st", "stranded_2nd"] depending on the strandness of your protocol.
 
 # Check results
 
