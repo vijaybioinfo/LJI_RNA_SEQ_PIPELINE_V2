@@ -2,7 +2,7 @@ import pandas as pd
 from glob import glob
 import sys
 
-conf_dir = "conf_RNA_Seq.json"
+conf_dir = "snake_conf.json"
 
 # Read in config
 
