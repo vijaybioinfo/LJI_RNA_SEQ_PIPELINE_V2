@@ -216,7 +216,7 @@ df_genetype = df_anno[['gene_type_4']].merge(df_counts_filter,left_index = True,
 df_QC_report['protein_coding_perc'] = (df_genetype['protein_coding']/df_counts_filter.sum(axis = 0)).apply(lambda x: round(100*x,2))
 df_QC_report['pseudogene_perc'] = (df_genetype['pseudogene']/df_counts_filter.sum(axis = 0)).apply(lambda x: round(100*x,2))
 df_QC_report['long-noncoding_perc'] = (df_genetype['long-noncoding']/df_counts_filter.sum(axis = 0)).apply(lambda x: round(100*x,2))
-df_QC_report['short-noncoding_perc'] = (df_genetype['short-noncoding']/df_counts_filter.sum(axis = 0)).apply(lambda x: round(100*x,2))
+# df_QC_report['short-noncoding_perc'] = (df_genetype['short-noncoding']/df_counts_filter.sum(axis = 0)).apply(lambda x: round(100*x,2))
 df_QC_report['Total_genes'] = (df_counts>10).sum(axis = 0)
 
 # Calculate minimal total STAR counts that yields desired percentage of gene recovery rate using Platt func for fitting, then take samples passing the initial filter and get minimal genes per sample based on normal distribution - those < 0.95 confidence interval will be marked 
@@ -242,10 +242,10 @@ df_QC_report['recommendation'] = [RNA_QC(row,dict_conf['QC_threshold'],X_thresho
 df_QC_report['Note'] = [RNA_QC(row,dict_conf['QC_threshold'],X_threshold,Y_lower)[1] for row in df_QC_report.itertuples()]
 df_QC_report[run_ID] = pd.read_csv(run_file,index_col = 0).loc[df_QC_report.index][run_ID]
 
-df_QC_report = df_QC_report[['total_reads','filtered_reads','filtered_reads_perc','adaptor_trimm_perc','dup_rate','uniquely_mapped_reads','uniquely_mapped_reads_perc','spliced_reads','anno_spliced_reads','too_short_reads','too_short_reads_perc','exonic_perc','intronic_perc','intergenic_perc','bias_5_prim','bias_3_prim','bias_5to3_prim','STAR_counts','STAR_counts_perc','t_rRNA_counts','t_rRNA_counts_perc','protein_coding_perc','pseudogene_perc','long-noncoding_perc','short-noncoding_perc','final_STAR_counts','insert_mean','insert_median','Total_genes','seq_QC','map_QC','bam_QC','bigwig','recommendation',run_ID,'Outlier','Note']]
+df_QC_report = df_QC_report[['total_reads','filtered_reads','filtered_reads_perc','adaptor_trimm_perc','dup_rate','uniquely_mapped_reads','uniquely_mapped_reads_perc','spliced_reads','anno_spliced_reads','too_short_reads','too_short_reads_perc','exonic_perc','intronic_perc','intergenic_perc','bias_5_prim','bias_3_prim','bias_5to3_prim','STAR_counts','STAR_counts_perc','t_rRNA_counts','t_rRNA_counts_perc','protein_coding_perc','pseudogene_perc','long-noncoding_perc','final_STAR_counts','insert_mean','insert_median','Total_genes','seq_QC','map_QC','bam_QC','bigwig','recommendation',run_ID,'Outlier','Note']]
 
 df_QC_report = df_QC_report.sort_index()
-df_QC_report[['total_reads','filtered_reads','filtered_reads_perc','adaptor_trimm_perc','dup_rate','uniquely_mapped_reads','uniquely_mapped_reads_perc','spliced_reads','anno_spliced_reads','too_short_reads','too_short_reads_perc','exonic_perc','intronic_perc','intergenic_perc','bias_5_prim','bias_3_prim','bias_5to3_prim','STAR_counts','STAR_counts_perc','t_rRNA_counts','t_rRNA_counts_perc','protein_coding_perc','pseudogene_perc','long-noncoding_perc','short-noncoding_perc','final_STAR_counts','insert_mean','insert_median','Total_genes','recommendation',run_ID,'Outlier','Note']].to_csv('4.Output/QC_report.csv')
+df_QC_report[['total_reads','filtered_reads','filtered_reads_perc','adaptor_trimm_perc','dup_rate','uniquely_mapped_reads','uniquely_mapped_reads_perc','spliced_reads','anno_spliced_reads','too_short_reads','too_short_reads_perc','exonic_perc','intronic_perc','intergenic_perc','bias_5_prim','bias_3_prim','bias_5to3_prim','STAR_counts','STAR_counts_perc','t_rRNA_counts','t_rRNA_counts_perc','protein_coding_perc','pseudogene_perc','long-noncoding_perc','final_STAR_counts','insert_mean','insert_median','Total_genes','recommendation',run_ID,'Outlier','Note']].to_csv('4.Output/QC_report.csv')
 
 df_html = df_QC_report[['seq_QC','map_QC','bam_QC','bigwig','recommendation',run_ID,'Outlier','Note']]
 df_html.index.name = f'<a href="./check_QC_PCA.html">PCA_plot</a>\t\t<a href="./QC_report.csv">Download_table</a>\t\t<a href="./QC_plots">QC_plots</a>'
