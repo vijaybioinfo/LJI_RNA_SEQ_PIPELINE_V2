@@ -1,0 +1,135 @@
+### Snakemake to QC sex gene expression, matching sample with genotyping and HLApers correction
+# Single-end
+import pandas as pd
+
+# Read in config
+run_file = config['config']['run_file']
+metadata = config['config']['metadata_dir']
+annotation_file = config['config']['annotation_file']
+
+script_path = config['app']['scripts']
+
+SAMPLES = list(pd.read_csv(run_file,index_col = 0).index)
+
+
+rule all:
+    input:
+        "4.Output/QC_sex/Sex-markers.csv",
+        "4.Output/QC_genotype/Genotype_predicted_reference.csv"
+
+
+##### rules to QCs matching samples with RNA seq
+rule RNA_genotype:
+    input:
+        bam = "2.Internal_files/bam_aligned/{sample}/{sample}_Aligned.sortedByCoord.out.bam",
+    output:
+        bam = "2.Internal_files/RNA_genotype/{sample}/{sample}_sorted_dedup.bam"
+    threads: 6
+    shell:
+        """
+        if [ "{config['config']['run_type']}" = "SE" ]; then
+            echo "[INFO] Running single-end duplicate removal"
+            samtools sort -@ {threads} {input.bam} | samtools markdup -r -@ {threads} - {output.bam}
+        elif [ "{config['config']['run_type']}" = "PE" ]; then
+            echo "[INFO] Running paired-end duplicate removal"
+            samtools sort -n -@ {threads} {input.bam} \
+            | samtools fixmate -m -u -@ {threads} - \
+            | samtools sort -@ {threads} -u - \
+            | samtools markdup -r -@ {threads} - {output.bam}
+        else
+            echo "[ERROR] Invalid read_type: "
+        fi
+        """
+
+rule RNA_callVariants:
+    input:
+        bam = "2.Internal_files/RNA_genotype/{sample}/{sample}_sorted_dedup.bam"
+    output:
+        vcf = "2.Internal_files/RNA_genotype/{sample}/{sample}_raw.vcf.gz"
+    params:
+        genome = config['config']['genome']
+    shell:
+        "bcftools mpileup -Ou -f {params.genome} {input.bam} | bcftools call -mv -Oz -o {output.vcf}"
+
+rule RNA_genotypeqcfilter:
+    input:
+        vcf = "2.Internal_files/RNA_genotype/{sample}/{sample}_raw.vcf.gz"
+    output:
+        vcf = "2.Internal_files/RNA_genotype/{sample}/{sample}_filtered.vcf.gz",
+        idx = "2.Internal_files/RNA_genotype/{sample}/{sample}_filtered.vcf.gz.tbi"
+    params:
+        genome = config['config']['genome'],
+        chrs = "chr_name_conv.txt"
+    shell:
+        """
+        bcftools view -i 'QUAL>=20 && DP>3' {input.vcf}| awk -F'\t' '/^#/ || $4 ~ /^[ACGTNacgtn*.]+$/' | bcftools norm -f {params.genome} -m -any | bcftools annotate --rename-chrs {params.chrs} --set-id '%CHROM\:%POS\:%REF\:%ALT' -Oz -o {output.vcf}
+        bcftools index -t {output.vcf}
+        """
+
+rule RNA_genotype_mergecalls:
+    input:
+        vcfs = expand("2.Internal_files/RNA_genotype/{sample}/{sample}_filtered.vcf.gz", sample = SAMPLES),
+        idx = expand("2.Internal_files/RNA_genotype/{sample}/{sample}_filtered.vcf.gz.tbi", sample = SAMPLES)
+    output:
+        samplenames = "2.Internal_files/RNA_genotype/cohort_sample_dict.txt",
+        tvcf = temp("2.Internal_files/RNA_genotype/cohort_missfiltered_temporal.vcf.gz"),
+        vcf = "2.Internal_files/RNA_genotype/cohort_missfiltered.vcf.gz",
+        idx = "2.Internal_files/RNA_genotype/cohort_missfiltered.vcf.gz.tbi",
+        variants = "2.Internal_files/RNA_genotype/cohort_variants.txt"
+    shell:
+        """
+        bcftools merge {input.vcfs} | bcftools  filter -i 'F_MISSING < 0.15'  -Oz -o {output.tvcf};
+        bcftools query -l {output.tvcf}| while read -r filepath; do filename=$(basename "$filepath" _sorted_dedup.bam); echo "$filepath $filename"; done > {output.samplenames};
+        bcftools reheader --samples {output.samplenames} -o {output.vcf} {output.tvcf};
+        bcftools index -t {output.vcf};
+        bcftools query -f  '%CHROM\t%POS\n'  {output.vcf} > {output.variants}
+        """
+
+rule subset_referenceVCF:
+    input:
+        variants = "2.Internal_files/RNA_genotype/cohort_variants.txt",
+        vcf = "2.Internal_files/RNA_genotype/cohort_missfiltered.vcf.gz",
+        referencevcf = "config["config"]["reference_vcf"]"
+    output:
+        vcf = "2.Internal_files/RNA_genotype/referece_subset.vcf.gz",
+        idx = "2.Internal_files/RNA_genotype/referece_subset.vcf.gz.tbi",
+        mergedvcf = "2.Internal_files/RNA_genotype/cohort_referece_merged.vcf.gz"
+    shell:
+        """
+        bcftools view -T {input.variants} {input.referencevcf} -Oz -o {output.vcf};
+        bcftools index -t {output.vcf};
+        bcftools merge  {input.vcf} {output.vcf}| bcftools filter  -i 'F_MISSING < 0.15'  -Oz -o {output.mergedvcf}
+        """
+
+rule calculate_IBD:
+    input:
+        vcf = "2.Internal_files/RNA_genotype/cohort_referece_merged.vcf.gz"
+    output:
+        ibd =  "2.Internal_files/RNA_genotype/IBD_referece_cohort.genome"
+    params:
+        prefix = "2.Internal_files/RNA_genotype/IBD_referece_cohort"
+    shell:
+        "plink --vcf {input.vcf} --genome --out {params.prefix} --const-fid"
+
+rule summary_IBD:
+    input:
+        ibd = "2.Internal_files/RNA_genotype/IBD_referece_cohort.genome"
+    output:
+        csv = "4.Output/QC_genotype/Genotype_predicted_referece.csv"
+    params:
+        script = script_path + "IBD_summary.R",
+    shell:
+        "Rscript {params.script} --metadata {metadata} --ibd {input.ibd} --outfile {output.csv}"
+
+### rules to QCs sex gene expression
+rule check_sexExpression:
+    input:
+        tpm = "4.Output/counts/TPM_counts.csv",
+    output:
+        "4.Output/QC_sex/Sex-markers.csv"
+    params:
+        script = script_path + "sex_boxplots.R",
+        outpath = "4.Output/QC_sex/"
+    shell:
+        "Rscript {params.script} --tpm {input.tpm} --metadata {metadata} --geneannot {annotation_file} --outpath {params.outpath}"
+
