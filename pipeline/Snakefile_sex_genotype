@@ -25,12 +25,14 @@ rule RNA_genotype:
     output:
         bam = "2.Internal_files/RNA_genotype/{sample}/{sample}_sorted_dedup.bam"
     threads: 6
+    params:
+        seqtech = config['config']['run_type']
     shell:
         """
-        if [ "{config['config']['run_type']}" = "SE" ]; then
+        if [ {params.seqtech} = "SE" ]; then
             echo "[INFO] Running single-end duplicate removal"
             samtools sort -@ {threads} {input.bam} | samtools markdup -r -@ {threads} - {output.bam}
-        elif [ "{config['config']['run_type']}" = "PE" ]; then
+        elif [ {params.seqtech} = "PE" ]; then
             echo "[INFO] Running paired-end duplicate removal"
             samtools sort -n -@ {threads} {input.bam} \
             | samtools fixmate -m -u -@ {threads} - \
@@ -89,7 +91,7 @@ rule subset_referenceVCF:
     input:
         variants = "2.Internal_files/RNA_genotype/cohort_variants.txt",
         vcf = "2.Internal_files/RNA_genotype/cohort_missfiltered.vcf.gz",
-        referencevcf = "config["config"]["reference_vcf"]"
+        referencevcf = config["config"]["reference_vcf"]
     output:
         vcf = "2.Internal_files/RNA_genotype/referece_subset.vcf.gz",
         idx = "2.Internal_files/RNA_genotype/referece_subset.vcf.gz.tbi",
@@ -115,7 +117,7 @@ rule summary_IBD:
     input:
         ibd = "2.Internal_files/RNA_genotype/IBD_referece_cohort.genome"
     output:
-        csv = "4.Output/QC_genotype/Genotype_predicted_referece.csv"
+        csv = "4.Output/QC_genotype/Genotype_predicted_reference.csv"
     params:
         script = script_path + "IBD_summary.R",
     shell:

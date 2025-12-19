@@ -5,7 +5,8 @@
         "samtools":"samtools",
         "bamCoverage":"/mnt/BioHome/ndu/anaconda3/bin/bamCoverage",
         "qualimap":"/home/ndu/tools/qualimap-build-11-11-19/qualimap",
-        "pipeline":"/mnt/BioAdHoc/Groups/vd-ay/RNASeq_Workflow/RNA_SEQ_Script/LJI_RNA_SEQ_PIPELINE_V2/pipeline"
+        "pipeline":"/mnt/BioAdHoc/Groups/vd-ay/RNASeq_Workflow/RNA_SEQ_Script/LJI_RNA_SEQ_PIPELINE_V2/pipeline",
+        "scripts":"/mnt/BioAdHoc/Groups/vd-ay/RNASeq_Workflow/RNA_SEQ_Script/LJI_RNA_SEQ_PIPELINE_V2/pipeline/scripts/"
     },
     
      "config": {
