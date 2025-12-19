@@ -14,6 +14,7 @@ sample_list = snakemake.params[1]
 # get counts
 df_anno = pd.read_csv(dict_conf['config']['annotation_file'],index_col = 0)
 ### Cristian edit to account for strandness of data
+seq_tech = dict_conf['config']['seq_tech']
 if seq_tech == 'unstranded': # SMARTseq
     count_tables = [pd.read_csv(f'2.Internal_files/bam_aligned/{sample}/{sample}_ReadsPerGene.out.tab',sep = '\t',skiprows = 4,header = None).set_index(0)[[1]].rename(columns={1: str(e)}) for e,sample in enumerate(sorted(sample_list))]
 elif seq_tech == 'stranded_1st': 
