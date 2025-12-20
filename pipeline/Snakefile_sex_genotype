@@ -35,8 +35,8 @@ rule RNA_genotype:
         elif [ {params.seqtech} = "PE" ]; then
             echo "[INFO] Running paired-end duplicate removal"
             samtools sort -n -@ {threads} {input.bam} \
-            | samtools fixmate -m -u -@ {threads} - \
-            | samtools sort -@ {threads} -u - \
+            | samtools fixmate -m -@ {threads} - - \
+            | samtools sort -@ {threads} - \
             | samtools markdup -r -@ {threads} - {output.bam}
         else
             echo "[ERROR] Invalid read_type: "
