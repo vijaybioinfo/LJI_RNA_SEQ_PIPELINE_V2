@@ -2,7 +2,7 @@
 import json
 from functools import reduce
 import pandas as pd
-pd.set_option('display.max_colwidth', -1) # make sure generated links have full string
+pd.set_option('display.max_colwidth', None) # make sure generated links have full string
 import numpy as np
 
 # modeling libs
